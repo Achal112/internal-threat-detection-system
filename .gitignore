@@ -1,0 +1,31 @@
+# Virtual Environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Model files (optional - we'll decide later)
+*.pkl
+
+# Environment variables
+.env
+
+# VS Code settings (optional)
+.vscode/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Streamlit cache
+.streamlit/
