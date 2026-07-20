@@ -1,23 +1,24 @@
 import streamlit as st
 
+from database.database import DatabaseManager
+
 st.set_page_config(
     page_title="SentinelAI",
     page_icon="🛡️",
     layout="wide"
 )
 
-st.title("🛡️ SentinelAI")
-st.subheader("AI-Based Insider Threat Detection")
+db = DatabaseManager()
+db.create_tables()
 
-st.success("System Status: Running")
+st.title("🛡 SentinelAI")
+
+st.success("Database Connected")
 
 col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.metric("Active Users", 0)
+col1.metric("Users", 0)
+col2.metric("Alerts", 0)
+col3.metric("Risk", "LOW")
 
-with col2:
-    st.metric("Threat Alerts", 0)
-
-with col3:
-    st.metric("Risk Level", "LOW")
+db.close()
