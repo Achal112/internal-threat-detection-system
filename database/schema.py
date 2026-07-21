@@ -32,10 +32,31 @@ CREATE TABLE IF NOT EXISTS alerts(
 """
 
 RISK_TABLE = """
-CREATE TABLE IF NOT EXISTS risk_scores(
+CREATE TABLE IF NOT EXISTS risk(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    score INTEGER,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    username TEXT NOT NULL,
+    risk_score INTEGER,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
+BASELINE_TABLE = """
+CREATE TABLE IF NOT EXISTS user_baseline(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT UNIQUE,
+
+    login_start TEXT,
+
+    login_end TEXT,
+
+    usb_allowed INTEGER,
+
+    avg_downloads INTEGER,
+
+    avg_files_opened INTEGER,
+
+    department TEXT
 );
 """
