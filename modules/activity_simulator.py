@@ -23,10 +23,17 @@ class ActivitySimulator:
 
         events = []
 
-        login_hour = 9
+        if scenario == NORMAL_DAY:
 
-        if scenario == INSIDER_ATTACK:
-            login_hour = 2
+                login_hour = random.randint(8, 10)
+                usb_used = random.randint(0, 1)
+                failed_logins = random.randint(0, 2)
+
+        else:
+
+                login_hour = random.randint(1, 3)
+                usb_used = random.randint(1, 3)
+                failed_logins = random.randint(3, 8)
 
         for event in scenario:
 
@@ -37,7 +44,9 @@ class ActivitySimulator:
                 "severity": event["severity"],
                 "downloads": event["downloads"],
                 "files_opened": event["files_opened"],
-                "login_hour": login_hour
+                "login_hour": login_hour,
+                "usb_used": usb_used,
+                "failed_logins": failed_logins
             })
 
         return events

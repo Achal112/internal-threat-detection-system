@@ -149,5 +149,57 @@ class DatabaseManager:
 
         return self.cursor.fetchall()
 
+    def get_event_count(self):
+
+        self.cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM events
+        """)
+
+        return self.cursor.fetchone()["total"]
+
+    def get_alert_count(self):
+
+        self.cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM alerts
+        """)
+
+        return self.cursor.fetchone()["total"]
+    
+    def get_user_count(self):
+
+        self.cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM user_baseline
+        """)
+
+        return self.cursor.fetchone()["total"]
+    
+    def get_latest_risks(self):
+
+        self.cursor.execute("""
+            SELECT
+                username,
+                MAX(risk_score) AS risk_score
+            FROM risk
+            GROUP BY username
+            ORDER BY risk_score DESC
+        """)
+
+        return [dict(row) for row in self.cursor.fetchall()]
+
+    def get_event_statistics(self):
+
+        self.cursor.execute("""
+            SELECT
+                event_type,
+                COUNT(*) AS total
+            FROM events
+            GROUP BY event_type
+        """)
+
+        return self.cursor.fetchall()
+
     def close(self):
         self.connection.close()
