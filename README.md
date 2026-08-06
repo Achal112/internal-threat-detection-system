@@ -122,10 +122,10 @@ The application will launch in your default browser.
 
 ## 📸 Dashboard Preview
 
-Add screenshots inside the **asset** folder and display them here.
+Add screenshots inside the **assets** folder and display them here.
 
 ```markdown
-![Dashboard](asset/dashboard.png)
+![Dashboard](assets/dashboard.png)
 ```
 
 ---
