@@ -92,6 +92,19 @@ class DatabaseManager:
         )
 
         return self.cursor.fetchone()
+
+    def get_user_profile(self, username):
+
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM user_baseline
+            WHERE username = ?
+            """,
+            (username,)
+        )
+
+        return self.cursor.fetchone()
     
     def insert_risk(self, username, score):
 
@@ -188,6 +201,22 @@ class DatabaseManager:
         """)
 
         return [dict(row) for row in self.cursor.fetchall()]
+
+    def get_user_risk_history(self, username):
+
+        self.cursor.execute(
+            """
+            SELECT
+                timestamp,
+                risk_score
+            FROM risk
+            WHERE username = ?
+            ORDER BY timestamp
+            """,
+            (username,)
+        )
+
+        return self.cursor.fetchall()
 
     def get_event_statistics(self):
 

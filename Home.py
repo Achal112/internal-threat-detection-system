@@ -87,6 +87,7 @@ if st.button("Generate Scenario"):
             activity,
             baseline
         )
+        st.session_state["latest_activity"] = activity
 
         explanation = explanation_engine.explain(
             activity,
@@ -113,9 +114,20 @@ if st.button("Generate Scenario"):
 
         prediction = ai_detector.predict(sample)
 
-        st.write(
-            f"AI Prediction for {activity['username']}: {prediction}"
-        )
+        predictions = {}
+
+        predictions[activity["username"]] = prediction
+
+        st.success("Scenario generated successfully!")
+
+        st.subheader("🤖 AI Detection Result")
+
+        for user, prediction in predictions.items():
+
+            if prediction == "Anomaly":
+                st.error(f"{user} → 🚨 AI detected anomalous behaviour")
+            else:
+                st.success(f"{user} → ✅ Normal behaviour")
 
         db.insert_risk(
             activity["username"],

@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 from database.database import DatabaseManager
 from modules.timeline_engine import TimelineEngine
 from modules.mitre_mapper import MitreMapper
+from modules.behavior_engine import BehaviorEngine
 
 st.set_page_config(
     page_title="Incident Investigation",
@@ -14,6 +16,7 @@ st.set_page_config(
 db = DatabaseManager()
 timeline_engine = TimelineEngine()
 mapper = MitreMapper()
+behavior_engine = BehaviorEngine()
 
 st.title("Incident Investigation")
 
@@ -33,6 +36,8 @@ selected_user = st.selectbox(
     users
 )
 
+profile = db.get_user_profile(selected_user)
+
 events = db.get_events()
 
 events = [
@@ -48,27 +53,88 @@ timeline = timeline_engine.build_timeline(events)
 
 st.subheader("Attack Timeline")
 
+timeline_table = []
+
 for item in timeline:
 
-    technique = mapper.map_event(item["event"])
+    timeline_table.append({
 
-    st.markdown(f"""
-        ### {item["icon"]} {item["event"]}
+        "Time": item["time"],
+        "Event": f'{item["icon"]} {item["event"]}',
+        "Severity": item["severity"],
+        "Description": item["description"]
 
-        **User:** {selected_user}
+    })
 
-        **Time:** {item["time"]}
+timeline_df = pd.DataFrame(timeline_table)
 
-        **MITRE ID:** {technique["id"]}
+st.dataframe(
+    timeline_df,
+    use_container_width=True,
+    hide_index=True
+)
 
-        **Technique:** {technique["name"]}
+st.divider()
 
-        **Description:**
+st.subheader("👤 Employee Profile")
 
-        {item["description"]}
+if profile:
 
-        ---
-        """)
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Department",
+        profile["department"]
+    )
+
+    col2.metric(
+        "Working Hours",
+        f'{profile["login_start"]} - {profile["login_end"]}'
+    )
+
+    col3.metric(
+        "USB Allowed",
+        "Yes" if profile["usb_allowed"] else "No"
+    )
+
+    col4, col5 = st.columns(2)
+
+    col4.metric(
+        "Avg Downloads",
+        profile["avg_downloads"]
+    )
+
+    col5.metric(
+        "Avg Files Opened",
+        profile["avg_files_opened"]
+    )
+
+else:
+
+    st.warning("Baseline profile not found.")
+
+st.divider()
+
+st.subheader("📊 Behavior Analytics")
+
+if "latest_activity" in st.session_state:
+
+    comparison = behavior_engine.compare(
+        st.session_state["latest_activity"],
+        profile
+    )
+
+    behavior_df = pd.DataFrame(comparison)
+
+    st.dataframe(
+        behavior_df,
+        hide_index=True,
+        use_container_width=True
+    )
+
+else:
+
+    st.info("Generate a scenario first.")
 
 # ------------------------------------
 # Current Risk
@@ -95,6 +161,38 @@ for row in risk_rows:
 
         else:
             st.success(f"🟢 Low Risk ({score})")
+
+
+st.divider()
+
+st.subheader("📈 Risk Trend")
+
+risk_history = db.get_user_risk_history(
+    selected_user
+)
+
+risk_df = pd.DataFrame(
+    [dict(row) for row in risk_history]
+)
+
+if not risk_df.empty:
+
+    fig = px.line(
+        risk_df,
+        x="timestamp",
+        y="risk_score",
+        markers=True,
+        title=f"{selected_user} Risk Trend"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+else:
+
+    st.info("No risk history available.")
 
 # ------------------------------------
 # Threat Timeline

@@ -25,6 +25,7 @@ class TimelineEngine:
                 "time": event["timestamp"],
                 "icon": icon,
                 "event": event["event_type"],
+                "severity": event["severity"],
                 "description": event["description"],
                 "user": event["username"]
 
