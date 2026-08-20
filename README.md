@@ -234,19 +234,35 @@ Employee Activity Simulation
 
 Screenshots can be added to the `assets/screenshots/` directory.
 
-Example:
+- Home Dashboard
 
 ```markdown
-![SentinelAI Dashboard](assets/screenshots/dashboard.png)
+![SentinelAI Dashboard](assets/screenshots/home.png)
 ```
 
-Recommended screenshots:
-
-- Home Dashboard
 - Security Alerts
+
+```markdown
+![SentinelAI Dashboard](assets/screenshots/alerts.png)
+```
+  
 - Incident Investigation
+
+```markdown
+![SentinelAI Dashboard](assets/screenshots/incident_investigation.png)
+```
+  
 - Employee Intelligence
+
+```markdown
+![SentinelAI Dashboard](assets/screenshots/employees.png)
+```
+
 - AI Analytics
+
+  ```markdown
+![SentinelAI Dashboard](assets/screenshots/ai_analytics.png)
+```
 
 ---
 
