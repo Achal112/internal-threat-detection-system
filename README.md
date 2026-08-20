@@ -236,33 +236,28 @@ Screenshots can be added to the `assets/screenshots/` directory.
 
 - Home Dashboard
 
-```markdown
 ![SentinelAI Dashboard](assets/screenshots/home.png)
-```
+
 
 - Security Alerts
 
-```markdown
 ![SentinelAI Dashboard](assets/screenshots/alerts.png)
-```
+
   
 - Incident Investigation
 
-```markdown
 ![SentinelAI Dashboard](assets/screenshots/incident_investigation.png)
-```
+
   
 - Employee Intelligence
 
-```markdown
 ![SentinelAI Dashboard](assets/screenshots/employees.png)
-```
+
 
 - AI Analytics
 
-  ```markdown
 ![SentinelAI Dashboard](assets/screenshots/ai_analytics.png)
-```
+
 
 ---
 
