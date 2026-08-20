@@ -1,19 +1,85 @@
-# 🛡️ AI-Based Internal Threat Detection System
+# 🛡️ SentinelAI — AI-Based Internal Threat Detection System
 
-An AI-powered cybersecurity application that detects potential insider threats by analyzing user behavior, calculating behavioral risk scores, and identifying anomalous activities. The system provides real-time monitoring through an interactive dashboard to help organizations strengthen internal security.
+SentinelAI is an AI-powered cybersecurity and User and Entity Behavior Analytics (UEBA) application designed to detect potential insider threats by analyzing employee behavior, identifying anomalies, calculating behavioral risk scores, and generating security alerts.
+
+The system simulates employee activities and provides a centralized security dashboard for monitoring suspicious behavior, investigating incidents, analyzing behavioral deviations, mapping activities to MITRE ATT&CK techniques, and generating incident reports.
 
 ---
 
 ## 🚀 Features
 
-- 🔍 Detects insider threats using behavioral analysis
-- 📊 Generates dynamic behavioral risk scores
-- ⚠️ Identifies anomalous user activities
-- 📈 Interactive Streamlit dashboard for monitoring
-- 🗄️ SQLite-based event storage and management
-- 🤖 Machine Learning-assisted risk analysis
-- 📅 Threat timeline visualization
-- 📢 Automated security alerts for high-risk events
+### 🏠 Security Dashboard
+
+- Generate simulated employee activity scenarios
+- Monitor employees, events, alerts, and average risk
+- View user risk distribution
+- Analyze security event distribution
+- Monitor recent employee activity
+- View top-risk employees
+
+### 🤖 AI-Powered Anomaly Detection
+
+- Machine-learning-based behavioral anomaly detection
+- Analyzes multiple behavioral features together
+- Detects activities classified as **Normal** or **Anomalous**
+- Stores historical AI analysis results
+- Provides employee-wise anomaly statistics
+- Calculates anomaly rates
+
+Behavioral features include:
+
+- Login hour
+- Number of downloads
+- Files opened
+- USB usage
+- Failed login attempts
+
+### 🚨 Security Alerts
+
+- Automatically generates alerts based on behavioral risk
+- Supports Critical, High, Medium, and Low threat levels
+- Filter alerts by employee
+- Filter alerts by threat level
+- View alert details and reasons
+- MITRE ATT&CK technique mapping
+- Alert distribution visualization
+- Investigate employees directly from selected alerts
+
+### 🔍 Incident Investigation
+
+- Employee-wise incident investigation
+- MITRE ATT&CK technique mapping
+- Behavioral deviation analysis
+- Attack and threat timelines
+- Current risk assessment
+- Historical risk trend visualization
+- AI-generated behavioral explanations
+- Investigation summary
+- Generate downloadable PDF incident reports
+
+### 👥 Employee Intelligence
+
+- Employee profiles
+- Department and role information
+- Behavioral security baselines
+- Normal login windows
+- USB access policies
+- Average downloads and files opened
+- Employee activity history
+- Current risk scores and threat levels
+- Historical risk visualization
+
+### 📊 Behavioral Risk Analysis
+
+SentinelAI evaluates employee activity against established behavioral baselines to identify suspicious deviations.
+
+The risk analysis considers factors such as:
+
+- Unusual login times
+- Excessive downloads
+- Abnormal file access
+- Unauthorized USB usage
+- Failed login attempts
 
 ---
 
@@ -22,11 +88,13 @@ An AI-powered cybersecurity application that detects potential insider threats b
 | Category | Technologies |
 |----------|--------------|
 | Programming Language | Python |
-| Frontend | Streamlit |
+| Web Framework | Streamlit |
 | Database | SQLite |
 | Machine Learning | Scikit-learn |
 | Data Processing | Pandas, NumPy |
-| Visualization | Plotly |
+| Data Visualization | Plotly |
+| Cybersecurity Framework | MITRE ATT&CK |
+| Report Generation | ReportLab |
 | Version Control | Git & GitHub |
 
 ---
@@ -36,61 +104,74 @@ An AI-powered cybersecurity application that detects potential insider threats b
 ```text
 internal-threat-detection-system/
 │
-├── app.py
+├── Home.py
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
 │
+├── pages/
+│   ├── Alerts.py
+│   ├── Incident_Investigation.py
+│   ├── Employees.py
+│   └── AI_Analytics.py
+│
 ├── database/
 │   ├── database.py
-│   ├── schema.py
+│   └── schema.py
 │
 ├── modules/
 │   ├── activity_simulator.py
+│   ├── anomaly_detector.py
+│   ├── behavior_analyzer.py
+│   ├── behavior_engine.py
+│   ├── explanation_engine.py
+│   ├── mitre_mapper.py
+│   ├── report_generator.py
 │   ├── risk_engine.py
-│   ├── baseline_seed.py
+│   └── timeline_engine.py
 │
 ├── assets/
-│   ├── dashboard.png
-│   └── architecture.png
+│   └── screenshots/
 │
 └── research/
     └── paper.pdf
 ```
 
+> Note: The exact project structure may contain additional supporting files such as baseline initialization or database utilities.
+
 ---
 
 ## ⚙️ Installation
 
-Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Achal112/internal-threat-detection-system.git
 ```
 
-Move into the project directory
+### 2. Move into the project directory
 
 ```bash
 cd internal-threat-detection-system
 ```
 
-Create a virtual environment
+### 3. Create a virtual environment
 
-### Windows
+#### Windows
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-### Linux / macOS
+#### Linux / macOS
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install dependencies
+### 4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -100,51 +181,104 @@ pip install -r requirements.txt
 
 ## ▶️ Run the Application
 
+Start SentinelAI using:
+
 ```bash
-streamlit run app.py
+streamlit run Home.py
 ```
 
-The application will launch in your default browser.
+The application will open in your default browser.
 
 ---
 
-## 📊 Project Workflow
+## 🔄 System Workflow
 
-1. Simulate user activities
-2. Store activity logs in SQLite
-3. Analyze behavioral patterns
-4. Calculate behavioral risk scores
-5. Detect anomalies
-6. Generate alerts
-7. Visualize insights on the dashboard
+```text
+Employee Activity Simulation
+            ↓
+      Event Storage
+        (SQLite)
+            ↓
+   Behavioral Analysis
+            ↓
+   Risk Score Calculation
+            ↓
+    AI Anomaly Detection
+            ↓
+   Security Alert Generation
+            ↓
+   MITRE ATT&CK Mapping
+            ↓
+   Incident Investigation
+            ↓
+  Risk & Behavioral Analytics
+            ↓
+   PDF Incident Report
+```
 
 ---
 
-## 📸 Dashboard Preview
+## 📊 Application Modules
 
-Add screenshots inside the **assets** folder and display them here.
+| Module | Purpose |
+|--------|---------|
+| 🏠 Home | Security dashboard and scenario generation |
+| 🚨 Alerts | Monitor, filter, and prioritize security alerts |
+| 🔍 Incident Investigation | Analyze employee incidents and generate reports |
+| 👥 Employee Intelligence | View employee profiles and behavioral baselines |
+| 🤖 AI Analytics | Analyze anomaly detection results and trends |
+
+---
+
+## 📸 Screenshots
+
+Screenshots can be added to the `assets/screenshots/` directory.
+
+Example:
 
 ```markdown
-![Dashboard](assets/dashboard.png)
+![SentinelAI Dashboard](assets/screenshots/dashboard.png)
 ```
+
+Recommended screenshots:
+
+- Home Dashboard
+- Security Alerts
+- Incident Investigation
+- Employee Intelligence
+- AI Analytics
 
 ---
 
-## 📖 Research Publication
+## 📖 Research Context
 
-This project forms the basis of a published research paper on AI-based insider threat detection using behavioral risk analysis and machine learning.
+This project is based on the concept of behavior-aware insider threat detection using temporal user activity analysis and personalized behavioral baselines.
+
+The system demonstrates how employee activity patterns can be analyzed to identify deviations from normal behavior and prioritize potentially risky activities for investigation.
+
+Key concepts explored include:
+
+- User and Entity Behavior Analytics (UEBA)
+- Behavioral baselining
+- Temporal activity analysis
+- Risk scoring
+- Machine learning-based anomaly detection
+- Insider threat detection
+- MITRE ATT&CK mapping
 
 ---
 
 ## 🔮 Future Enhancements
 
-- Deep Learning-based anomaly detection
 - Real-time log ingestion
+- Integration with SIEM platforms
+- Deep learning-based anomaly detection
+- Automated threat response
+- Email or notification alerts
 - Role-Based Access Control (RBAC)
-- Email/SMS alert integration
-- SIEM integration
-- Docker deployment
-- Cloud deployment on AWS
+- Docker containerization
+- Cloud deployment
+- Integration with real enterprise security logs
 
 ---
 
@@ -153,12 +287,16 @@ This project forms the basis of a published research paper on AI-based insider t
 - Python Programming
 - Object-Oriented Programming
 - Machine Learning
-- Behavioral Analytics
+- Anomaly Detection
+- User and Entity Behavior Analytics (UEBA)
 - Cybersecurity
-- Risk Analysis
-- SQLite Database
-- Data Processing
+- Insider Threat Detection
+- Behavioral Risk Analysis
+- MITRE ATT&CK Mapping
+- SQLite Database Management
+- Data Visualization
 - Streamlit Development
+- PDF Report Generation
 - Software Design
 - Git & GitHub
 
@@ -175,4 +313,4 @@ This project forms the basis of a published research paper on AI-based insider t
 
 ## ⭐ Support
 
-If you found this project useful, consider giving it a ⭐ on GitHub.
+If you found this project interesting, consider giving the repository a ⭐ on GitHub.
