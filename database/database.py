@@ -6,7 +6,8 @@ from database.schema import (
     EVENTS_TABLE,
     ALERTS_TABLE,
     RISK_TABLE,
-    BASELINE_TABLE
+    BASELINE_TABLE,
+    AI_ANALYSIS_TABLE
 )
 
 class DatabaseManager:
@@ -23,8 +24,36 @@ class DatabaseManager:
         self.cursor.execute(ALERTS_TABLE)
         self.cursor.execute(RISK_TABLE)
         self.cursor.execute(BASELINE_TABLE)
+        self.cursor.execute(AI_ANALYSIS_TABLE)
+
         self.connection.commit()
 
+        self.insert_users()
+
+    def insert_users(self):
+
+        users = [
+            ("Alice", "IT", "Developer", "09:00"),
+            ("Bob", "Finance", "Analyst", "09:00"),
+            ("Charlie", "HR", "Manager", "10:00"),
+            ("David", "Security", "Security Analyst", "09:00")
+        ]
+
+        self.cursor.executemany(
+            """
+            INSERT OR IGNORE INTO users(
+                username,
+                department,
+                role,
+                normal_login_time
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            users
+        )
+
+        self.connection.commit()
+    
     def insert_event(self, username, event_type, description, severity):
         self.cursor.execute(
             """
@@ -97,14 +126,59 @@ class DatabaseManager:
 
         self.cursor.execute(
             """
-            SELECT *
-            FROM user_baseline
+            SELECT
+                username,
+                department,
+                role,
+                normal_login_time,
+                created_at
+            FROM users
             WHERE username = ?
+            LIMIT 1
             """,
             (username,)
         )
 
         return self.cursor.fetchone()
+
+    def get_user_baseline(self, username):
+
+        self.cursor.execute(
+            """
+            SELECT
+                username,
+                login_start,
+                login_end,
+                usb_allowed,
+                avg_downloads,
+                avg_files_opened,
+                department
+            FROM user_baseline
+            WHERE username = ?
+            LIMIT 1
+            """,
+            (username,)
+        )
+
+        return self.cursor.fetchone()
+
+    def get_all_users(self):
+
+        self.cursor.execute(
+            """
+            SELECT
+                username,
+                MAX(department) AS department,
+                MAX(role) AS role,
+                MAX(normal_login_time) AS normal_login_time
+            FROM users
+            GROUP BY username
+            ORDER BY username
+            """
+        )
+
+        return self.cursor.fetchall()
+
     
     def insert_risk(self, username, score):
 
@@ -120,6 +194,69 @@ class DatabaseManager:
     )
 
         self.connection.commit()
+
+    def insert_ai_analysis(
+        self,
+        username,
+        login_hour,
+        downloads,
+        files_opened,
+        usb_used,
+        failed_logins,
+        prediction
+    ):
+
+        self.cursor.execute(
+            """
+            INSERT INTO ai_analysis(
+                username,
+                login_hour,
+                downloads,
+                files_opened,
+                usb_used,
+                failed_logins,
+                prediction
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                username,
+                login_hour,
+                downloads,
+                files_opened,
+                usb_used,
+                failed_logins,
+                prediction
+            )
+        )
+
+        self.connection.commit()
+
+    def get_ai_analysis(self):
+
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM ai_analysis
+            ORDER BY id DESC
+            """
+        )
+
+        return self.cursor.fetchall()
+
+    def get_user_ai_analysis(self, username):
+
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM ai_analysis
+            WHERE username = ?
+            ORDER BY timestamp DESC
+            """,
+            (username,)
+        )
+
+        return self.cursor.fetchall()
 
     def insert_alert(
         self,
@@ -184,7 +321,7 @@ class DatabaseManager:
 
         self.cursor.execute("""
             SELECT COUNT(*) AS total
-            FROM user_baseline
+            FROM users
         """)
 
         return self.cursor.fetchone()["total"]
@@ -232,3 +369,5 @@ class DatabaseManager:
 
     def close(self):
         self.connection.close()
+
+    

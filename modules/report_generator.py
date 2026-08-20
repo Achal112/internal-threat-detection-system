@@ -1,121 +1,325 @@
+from io import BytesIO
+from datetime import datetime
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
-    Spacer
+    Spacer,
+    Table,
+    TableStyle,
+    PageBreak
 )
 
-from reportlab.lib.styles import getSampleStyleSheet
 
-from datetime import datetime
+class IncidentReportGenerator:
 
+    def __init__(self):
 
-class ReportGenerator:
+        self.styles = getSampleStyleSheet()
+
+        self.title_style = ParagraphStyle(
+            "ReportTitle",
+            parent=self.styles["Title"],
+            alignment=TA_CENTER,
+            fontSize=20,
+            spaceAfter=10
+        )
+
+        self.heading_style = ParagraphStyle(
+            "ReportHeading",
+            parent=self.styles["Heading2"],
+            fontSize=14,
+            spaceBefore=12,
+            spaceAfter=8
+        )
+
+        self.body_style = ParagraphStyle(
+            "ReportBody",
+            parent=self.styles["BodyText"],
+            fontSize=9,
+            leading=13
+        )
 
     def generate(
         self,
-        filename,
-        profile,
-        risk,
+        username,
+        risk_score,
+        threat_level,
+        events,
+        mitre_results,
+        explanation,
         reasons,
-        mitre,
-        explanation
+        department="Unknown",
+        role="Unknown"
     ):
 
-        styles = getSampleStyleSheet()
+        buffer = BytesIO()
 
-        pdf = SimpleDocTemplate(filename)
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=18 * mm,
+            leftMargin=18 * mm,
+            topMargin=18 * mm,
+            bottomMargin=18 * mm
+        )
 
         story = []
 
-        story.append(
-            Paragraph(
-                "<b>SentinelAI Incident Report</b>",
-                styles["Title"]
-            )
-        )
-
-        story.append(Spacer(1,20))
+        # -----------------------------------------
+        # Title
+        # -----------------------------------------
 
         story.append(
             Paragraph(
-                f"<b>Employee:</b> {profile['username']}",
-                styles["BodyText"]
+                "SentinelAI",
+                self.title_style
             )
         )
 
         story.append(
             Paragraph(
-                f"<b>Department:</b> {profile['department']}",
-                styles["BodyText"]
+                "Incident Investigation Report",
+                self.heading_style
             )
         )
 
         story.append(
             Paragraph(
-                f"<b>Risk Score:</b> {risk}",
-                styles["BodyText"]
+                f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                self.body_style
+            )
+        )
+
+        story.append(Spacer(1, 10))
+
+        # -----------------------------------------
+        # Employee Information
+        # -----------------------------------------
+
+        story.append(
+            Paragraph(
+                "1. Employee Information",
+                self.heading_style
+            )
+        )
+
+        employee_data = [
+            ["Employee", username],
+            ["Department", department],
+            ["Role", role],
+            ["Risk Score", str(risk_score)],
+            ["Threat Level", threat_level]
+        ]
+
+        employee_table = Table(
+            employee_data,
+            colWidths=[45 * mm, 120 * mm]
+        )
+
+        employee_table.setStyle(
+            TableStyle([
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+                ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("PADDING", (0, 0), (-1, -1), 6)
+            ])
+        )
+
+        story.append(employee_table)
+
+        # -----------------------------------------
+        # Risk Assessment
+        # -----------------------------------------
+
+        story.append(
+            Paragraph(
+                "2. Risk Assessment",
+                self.heading_style
             )
         )
 
         story.append(
             Paragraph(
-                f"<b>Date:</b> {datetime.now()}",
-                styles["BodyText"]
+                str(explanation),
+                self.body_style
             )
         )
 
-        story.append(Spacer(1,20))
+        story.append(Spacer(1, 6))
+
+        if reasons:
+
+            reason_rows = [
+                ["Risk Indicators"]
+            ]
+
+            for reason in reasons:
+                reason_rows.append([str(reason)])
+
+            reason_table = Table(
+                reason_rows,
+                colWidths=[165 * mm]
+            )
+
+            reason_table.setStyle(
+                TableStyle([
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("PADDING", (0, 0), (-1, -1), 6)
+                ])
+            )
+
+            story.append(reason_table)
+
+        # -----------------------------------------
+        # MITRE ATT&CK
+        # -----------------------------------------
 
         story.append(
             Paragraph(
-                "<b>Reasons</b>",
-                styles["Heading2"]
+                "3. MITRE ATT&CK Mapping",
+                self.heading_style
             )
         )
 
-        for reason in reasons:
+        mitre_data = [
+            [
+                "Event",
+                "Technique",
+                "MITRE ID",
+                "Tactic"
+            ]
+        ]
+
+        for result in mitre_results:
+
+            mitre_data.append([
+                result.get("event", "Unknown"),
+                result.get("name", "Unknown"),
+                result.get("id", "N/A"),
+                result.get("tactic", "Unknown")
+            ])
+
+        if len(mitre_data) > 1:
+
+            mitre_table = Table(
+                mitre_data,
+                colWidths=[
+                    35 * mm,
+                    55 * mm,
+                    30 * mm,
+                    45 * mm
+                ]
+            )
+
+            mitre_table.setStyle(
+                TableStyle([
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("PADDING", (0, 0), (-1, -1), 5)
+                ])
+            )
+
+            story.append(mitre_table)
+
+        else:
 
             story.append(
                 Paragraph(
-                    f"• {reason}",
-                    styles["BodyText"]
+                    "No MITRE ATT&CK techniques identified.",
+                    self.body_style
                 )
             )
 
-        story.append(Spacer(1,20))
+        # -----------------------------------------
+        # Activity Timeline
+        # -----------------------------------------
 
         story.append(
             Paragraph(
-                "<b>MITRE ATT&CK</b>",
-                styles["Heading2"]
+                "4. Activity Timeline",
+                self.heading_style
             )
         )
 
-        for attack in mitre:
+        event_data = [
+            [
+                "Time",
+                "Event",
+                "Severity",
+                "Description"
+            ]
+        ]
+
+        for event in events:
+
+            event_data.append([
+                str(event["timestamp"]),
+                str(event["event_type"]),
+                str(event["severity"]),
+                str(event["description"])
+            ])
+
+        if len(event_data) > 1:
+
+            event_table = Table(
+                event_data,
+                colWidths=[
+                    30 * mm,
+                    35 * mm,
+                    25 * mm,
+                    75 * mm
+                ]
+            )
+
+            event_table.setStyle(
+                TableStyle([
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 7.5),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("PADDING", (0, 0), (-1, -1), 4)
+                ])
+            )
+
+            story.append(event_table)
+
+        else:
 
             story.append(
                 Paragraph(
-                    attack,
-                    styles["BodyText"]
+                    "No activity events recorded.",
+                    self.body_style
                 )
             )
 
-        story.append(Spacer(1,20))
+        # -----------------------------------------
+        # Footer
+        # -----------------------------------------
+
+        story.append(Spacer(1, 20))
 
         story.append(
             Paragraph(
-                "<b>AI Explanation</b>",
-                styles["Heading2"]
+                "Generated by SentinelAI — AI-Based Insider Threat Detection & UEBA Platform",
+                self.body_style
             )
         )
 
-        for line in explanation:
+        document.build(story)
 
-            story.append(
-                Paragraph(
-                    line,
-                    styles["BodyText"]
-                )
-            )
+        buffer.seek(0)
 
-        pdf.build(story)
+        return buffer

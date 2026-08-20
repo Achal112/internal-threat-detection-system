@@ -1,55 +1,72 @@
 class MitreMapper:
 
-    def __init__(self):
+    MITRE_MAPPING = {
 
-        self.techniques = {
+        "login": {
+            "name": "Valid Accounts",
+            "id": "T1078",
+            "tactic": "Initial Access"
+        },
 
-            "Login": {
-                "id": "T1078",
-                "name": "Valid Accounts"
-            },
+        "failed_login": {
+            "name": "Brute Force",
+            "id": "T1110",
+            "tactic": "Credential Access"
+        },
 
-            "USB Inserted": {
-                "id": "T1091",
-                "name": "Replication Through Removable Media"
-            },
+        "file_access": {
+            "name": "Data from Local System",
+            "id": "T1005",
+            "tactic": "Collection"
+        },
 
-            "Download File": {
-                "id": "T1048",
-                "name": "Exfiltration Over Alternative Protocol"
-            },
+        "mass_download": {
+            "name": "Data from Local System",
+            "id": "T1005",
+            "tactic": "Collection"
+        },
 
-            "Access Database": {
-                "id": "T1213",
-                "name": "Data from Information Repositories"
-            },
+        "usb": {
+            "name": "Exfiltration Over Physical Medium",
+            "id": "T1052.001",
+            "tactic": "Exfiltration"
+        },
 
-            "Open File": {
-                "id": "T1005",
-                "name": "Data from Local System"
-            },
-
-            "Send Email": {
-                "id": "T1567",
-                "name": "Exfiltration Over Web Service"
-            },
-
-            "Logout": {
-                "id": "-",
-                "name": "Normal Activity"
-            }
-
+        "usb_transfer": {
+            "name": "Exfiltration Over Physical Medium",
+            "id": "T1052.001",
+            "tactic": "Exfiltration"
         }
+    }
 
     def map_event(self, event_type):
 
-        return self.techniques.get(
+        event_type = event_type.lower().strip()
 
+        return self.MITRE_MAPPING.get(
             event_type,
-
             {
-                "id": "Unknown",
-                "name": "Unknown Technique"
+                "name": "Unknown",
+                "id": "N/A",
+                "tactic": "Unknown"
             }
-
         )
+
+    def map_events(self, events):
+
+        mappings = []
+
+        for event in events:
+
+            technique = self.map_event(
+                event["event_type"]
+            )
+
+            mappings.append({
+                "event": event["event_type"],
+                "name": technique["name"],
+                "id": technique["id"],
+                "tactic": technique["tactic"]
+            })
+
+        return mappings

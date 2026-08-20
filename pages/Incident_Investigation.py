@@ -6,6 +6,8 @@ from database.database import DatabaseManager
 from modules.timeline_engine import TimelineEngine
 from modules.mitre_mapper import MitreMapper
 from modules.behavior_engine import BehaviorEngine
+from modules.report_generator import IncidentReportGenerator
+from modules.behavior_analyzer import BehaviorAnalyzer
 
 st.set_page_config(
     page_title="Incident Investigation",
@@ -17,6 +19,8 @@ db = DatabaseManager()
 timeline_engine = TimelineEngine()
 mapper = MitreMapper()
 behavior_engine = BehaviorEngine()
+report_generator = IncidentReportGenerator()
+behavior_analyzer = BehaviorAnalyzer()
 
 st.title("Incident Investigation")
 
@@ -31,12 +35,25 @@ users = [
     "David"
 ]
 
+# Get employee selected from Alerts page
+default_user = st.session_state.get(
+    "investigation_user"
+)
+
+# Find the correct default index
+if default_user in users:
+    default_index = users.index(default_user)
+else:
+    default_index = 0
+
 selected_user = st.selectbox(
     "Select Employee",
-    users
+    users,
+    index=default_index
 )
 
 profile = db.get_user_profile(selected_user)
+baseline = db.get_user_baseline(selected_user)
 
 events = db.get_events()
 
@@ -45,7 +62,112 @@ events = [
     if e["username"] == selected_user
 ]
 
+# ------------------------------------
+# MITRE ATT&CK Mapping
+# ------------------------------------
+
+st.divider()
+
+st.subheader("MITRE ATT&CK Mapping")
+
+mitre_results = mapper.map_events(events)
+
+mitre_table = []
+
+for result in mitre_results:
+
+    mitre_table.append({
+        "Event": result["event"],
+        "Technique": result["name"],
+        "MITRE ID": result["id"],
+        "Tactic": result["tactic"]
+    })
+
+mitre_df = pd.DataFrame(mitre_table)
+
+if not mitre_df.empty:
+
+    st.dataframe(
+        mitre_df,
+        hide_index=True,
+        use_container_width=True
+    )
+
+else:
+
+    st.info(
+        "No MITRE ATT&CK techniques detected."
+    )
+
 timeline = timeline_engine.build_timeline(events)
+
+# ------------------------------------
+# Behavioral Deviations
+# ------------------------------------
+
+st.divider()
+
+st.subheader("Behavioral Deviations")
+
+if baseline is not None and events:
+
+    # Use the most recent relevant activity
+    latest_event = events[0]
+
+    # Activity data may not exist in the database event row,
+    # so use the latest generated activity when available.
+    activity = st.session_state.get(
+        "latest_activity"
+    )
+
+    if activity is not None:
+
+        deviations = behavior_analyzer.analyze(
+            activity,
+            baseline
+        )
+
+        if deviations:
+
+            deviation_table = []
+
+            for deviation in deviations:
+
+                deviation_table.append({
+                    "Category": deviation["category"],
+                    "Normal": deviation["normal"],
+                    "Observed": deviation["observed"],
+                    "Severity": deviation["severity"],
+                    "Deviation": deviation["message"]
+                })
+
+            deviation_df = pd.DataFrame(
+                deviation_table
+            )
+
+            st.dataframe(
+                deviation_df,
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+
+            st.success(
+                "No significant behavioral deviations detected."
+            )
+
+    else:
+
+        st.info(
+            "Generate a scenario first to analyze behavioral deviations."
+        )
+
+else:
+
+    st.info(
+        "Behavioral baseline is not available for this employee."
+    )
 
 # ------------------------------------
 # Attack Timeline
@@ -76,52 +198,56 @@ st.dataframe(
 
 st.divider()
 
-st.subheader("👤 Employee Profile")
+# Employee Profile--------------------------------------!
 
-if profile:
+st.subheader("Employee Profile")
+
+if profile and baseline:
 
     col1, col2, col3 = st.columns(3)
 
     col1.metric(
         "Department",
-        profile["department"]
+        profile["department"] or "Unknown"
     )
 
     col2.metric(
         "Working Hours",
-        f'{profile["login_start"]} - {profile["login_end"]}'
+        f'{baseline["login_start"]} - {baseline["login_end"]}'
     )
 
     col3.metric(
         "USB Allowed",
-        "Yes" if profile["usb_allowed"] else "No"
+        "Yes" if baseline["usb_allowed"] else "No"
     )
 
     col4, col5 = st.columns(2)
 
     col4.metric(
         "Avg Downloads",
-        profile["avg_downloads"]
+        baseline["avg_downloads"]
     )
 
     col5.metric(
         "Avg Files Opened",
-        profile["avg_files_opened"]
+        baseline["avg_files_opened"]
     )
 
 else:
 
-    st.warning("Baseline profile not found.")
+    st.warning("Employee profile or baseline not found.")
 
 st.divider()
 
-st.subheader("📊 Behavior Analytics")
+# behavior analytics----------------------------------------!
 
-if "latest_activity" in st.session_state:
+st.subheader("Behavior Analytics")
+
+if "latest_activity" in st.session_state and baseline:
 
     comparison = behavior_engine.compare(
         st.session_state["latest_activity"],
-        profile
+        baseline
     )
 
     behavior_df = pd.DataFrame(comparison)
@@ -135,7 +261,7 @@ if "latest_activity" in st.session_state:
 else:
 
     st.info("Generate a scenario first.")
-
+    
 # ------------------------------------
 # Current Risk
 # ------------------------------------
@@ -165,7 +291,7 @@ for row in risk_rows:
 
 st.divider()
 
-st.subheader("📈 Risk Trend")
+st.subheader("Risk Trend")
 
 risk_history = db.get_user_risk_history(
     selected_user
@@ -270,6 +396,125 @@ with st.expander("Investigation Summary", expanded=False):
     c2.metric("Critical", critical_events)
     c3.metric("High", high_events)
     c4.metric("Medium", medium_events)
+
+# ------------------------------------
+# Incident Report
+# ------------------------------------
+
+st.divider()
+
+st.subheader("Incident Report")
+
+if events:
+
+    # --------------------------------
+    # Get selected user's risk
+    # --------------------------------
+
+    selected_risk = 0
+
+    for row in risk_rows:
+
+        if row["username"] == selected_user:
+            selected_risk = row["risk_score"]
+            break
+
+    # --------------------------------
+    # Determine threat level
+    # --------------------------------
+
+    if selected_risk >= 80:
+        threat_level = "Critical"
+
+    elif selected_risk >= 50:
+        threat_level = "High"
+
+    elif selected_risk >= 20:
+        threat_level = "Medium"
+
+    else:
+        threat_level = "Low"
+
+    # --------------------------------
+    # Get MITRE mappings
+    # --------------------------------
+
+    mitre_results = mapper.map_events(events)
+
+    # --------------------------------
+    # Get explanation
+    # --------------------------------
+
+    explanation = st.session_state.get(
+        "last_explanation",
+        "No AI explanation available."
+    )
+
+    # --------------------------------
+    # Risk reasons
+    # --------------------------------
+
+    reasons = []
+
+    for event in events:
+
+        if event["severity"].lower() in [
+            "high",
+            "critical"
+        ]:
+
+            reasons.append(
+                event["description"]
+            )
+
+    # Remove duplicates
+    reasons = list(dict.fromkeys(reasons))
+
+    # --------------------------------
+    # Generate PDF
+    # --------------------------------
+
+    if st.button("Generate Incident Report"):
+
+        profile = db.get_user_profile(selected_user)
+
+        department = "Unknown"
+
+        if profile:
+            department = profile["department"] or "Unknown"
+
+            pdf = report_generator.generate(
+
+                username=selected_user,
+
+                risk_score=selected_risk,
+
+                threat_level=threat_level,
+
+                department=department,
+
+                events=events,
+
+                mitre_results=mitre_results,
+
+                explanation=explanation,
+
+                reasons=reasons
+            )
+
+        st.download_button(
+            label="Download Incident Report",
+            data=pdf,
+            file_name=f"{selected_user}_incident_report.pdf",
+            mime="application/pdf"
+        )
+
+else:
+
+    st.info(
+        "No activity available for report generation."
+    )
+
 # ------------------------------------
 # AI Explanation
 # ------------------------------------

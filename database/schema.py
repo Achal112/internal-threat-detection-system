@@ -60,3 +60,27 @@ CREATE TABLE IF NOT EXISTS user_baseline(
     department TEXT
 );
 """
+
+AI_ANALYSIS_TABLE = """
+CREATE TABLE IF NOT EXISTS ai_analysis(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT NOT NULL,
+
+    login_hour INTEGER,
+
+    downloads INTEGER,
+
+    files_opened INTEGER,
+
+    usb_used INTEGER,
+
+    failed_logins INTEGER,
+
+    prediction TEXT,
+
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+);
+"""
